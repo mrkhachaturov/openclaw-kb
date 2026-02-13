@@ -312,10 +312,10 @@ node check-chunks.js
 
 ## Performance
 
-- **Index time**: ~5-10 minutes for full OpenClaw codebase (~4000 chunks)
+- **Index time**: ~10-15 minutes for full OpenClaw codebase (~7700 chunks from 2500 files)
 - **Query time**: <100ms (hybrid search)
-- **Storage**: ~50MB SQLite database
-- **Cost**: ~$0.10 per full reindex (OpenAI embeddings)
+- **Storage**: ~80MB SQLite database
+- **Cost**: ~$0.15 per full reindex (OpenAI embeddings)
 
 ## Troubleshooting
 

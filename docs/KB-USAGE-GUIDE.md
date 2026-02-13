@@ -6,11 +6,11 @@
 
 ## Overview
 
-The upstream knowledge base contains **3,910 indexed chunks** from OpenClaw documentation and source code:
-- **Docs**: User guides, configuration references, concepts
-- **Code**: Implementation source (TypeScript) with code-aware chunking
-- **Config schemas**: Type definitions, validation schemas
-- **Skills**: Real-world skill examples
+The upstream knowledge base contains **7,735 indexed chunks** from OpenClaw documentation and source code:
+- **Docs** (1,372 chunks): User guides, configuration references, concepts
+- **Source** (1,685 chunks): **Complete** src/ directory — all TypeScript/JavaScript implementation files
+- **Extensions** (2,141 chunks): All extension plugins (Discord, Slack, IRC, Matrix, Feishu, etc.)
+- **Skills** (129 chunks): Skill manifests (SKILL.md) and handlers
 
 **Query Features:**
 - ✨ **Automatic query expansion**: Abbreviations and synonyms are handled automatically

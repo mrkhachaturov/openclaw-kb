@@ -41,7 +41,7 @@ if [ ! -d "$UPSTREAM_DIR" ]; then
 fi
 
 # KB source directory prefixes (from upstream/kb/lib/config.js SOURCES)
-KB_PREFIXES="^(docs/|src/config/|src/gateway/|src/telegram/|skills/|src/agents/|src/memory/|src/infra/|src/security/|src/hooks/|src/sessions/|src/channels/|src/providers/|src/plugins/)"
+KB_PREFIXES="^(docs/|src/|extensions/|skills/)"
 
 cd "$UPSTREAM_DIR"
 
@@ -63,9 +63,9 @@ CURRENT_TAG=$(git describe --tags --exact-match 2>/dev/null || echo "none")
 CURRENT_COMMIT=$(git rev-parse HEAD)
 TARGET_COMMIT=$(git rev-parse "$LATEST_TAG")
 
-if [ "$CURRENT_COMMIT" = "$TARGET_COMMIT" ]; then
+if [ "$CURRENT_TAG" = "$LATEST_TAG" ]; then
     echo "[kb-auto-update] Already on latest release ($LATEST_TAG)"
-    log_sync "$LATEST_TAG | no changes | already on latest"
+    # No logging - only log when version number changes
     exit 0
 fi
 
@@ -93,7 +93,7 @@ if [ -z "$RELEVANT" ]; then
     echo "[kb-auto-update] No KB-relevant files changed, skipping reindex"
     echo "[kb-auto-update] Changed files (not indexed):"
     echo "$CHANGED" | head -20 | sed 's/^/  /' || echo "  (none)"
-    log_sync "$CURRENT_TAG → $LATEST_TAG | 0 KB files | skipped"
+    # No logging - KB was not updated (for system logs use journalctl -u astromech-kb-sync)
     exit 0
 fi
 

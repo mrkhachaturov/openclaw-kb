@@ -39,7 +39,7 @@ cp .env.example .env
 # Clone OpenClaw source (required for indexing)
 git clone https://github.com/openclaw/openclaw.git ../source
 
-# Run initial indexing (5-10 minutes)
+# Run initial indexing (10-15 minutes)
 node index.js
 ```
 
@@ -421,10 +421,10 @@ cat .env | grep OPENAI_API_KEY
 
 ## Performance
 
-- **Index time:** ~5-10 minutes for full OpenClaw codebase (~4000 chunks)
+- **Index time:** ~10-15 minutes for full OpenClaw codebase (~7700 chunks from 2500 files)
 - **Query time:** <100ms (hybrid search, in-memory)
-- **Storage:** ~50MB SQLite database
-- **API cost:** ~$0.10 per full re-index (OpenAI embeddings)
+- **Storage:** ~80MB SQLite database
+- **API cost:** ~$0.15 per full re-index (OpenAI embeddings)
 
 ---
 
