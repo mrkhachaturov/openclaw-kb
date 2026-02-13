@@ -1,0 +1,43 @@
+{
+  "name": "openclaw-kb",
+  "version": "1.0.0",
+  "description": "Self-updating vector knowledge base for OpenClaw — semantic search over docs, code, and configs with automatic release tracking",
+  "type": "module",
+  "private": false,
+  "main": "query.js",
+  "bin": {
+    "openclaw-kb": "./query.js"
+  },
+  "scripts": {
+    "index": "node index.js",
+    "query": "node query.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrkhachaturov/openclaw-kb.git"
+  },
+  "keywords": [
+    "openclaw",
+    "knowledge-base",
+    "vector-search",
+    "semantic-search",
+    "embeddings",
+    "sqlite",
+    "documentation",
+    "ai",
+    "llm",
+    "rag"
+  ],
+  "author": "Ruben Khachaturov <mr.kha4a2rov@protonmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mrkhachaturov/openclaw-kb/issues"
+  },
+  "homepage": "https://github.com/mrkhachaturov/openclaw-kb#readme",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "sqlite-vec": "0.1.7-alpha.2"
+  }
+}

@@ -1,0 +1,124 @@
+{
+  "queries": [
+    {
+      "id": "q1-docs-config",
+      "text": "how to configure OpenClaw agent workspace",
+      "category": "docs",
+      "expectedResults": ["docs/agents.md", "docs/configuration.md", "docs/workspaces"]
+    },
+    {
+      "id": "q2-code-sessions",
+      "text": "session state management implementation",
+      "category": "code",
+      "expectedResults": ["src/sessions/", "src/gateway/server-methods/sessions"]
+    },
+    {
+      "id": "q3-debug-memory",
+      "text": "memory search not returning relevant results",
+      "category": "debugging",
+      "expectedResults": ["src/memory/search-manager", "src/memory/hybrid"]
+    },
+    {
+      "id": "q4-skills-syntax",
+      "text": "SKILL.md file format and tool definition syntax",
+      "category": "skills",
+      "expectedResults": ["skills/", "docs/skills.md", "SKILL.md"]
+    },
+    {
+      "id": "q5-hooks-automation",
+      "text": "webhook automation and triggers",
+      "category": "features",
+      "expectedResults": ["src/hooks/", "docs/hooks", "docs/automation"]
+    },
+    {
+      "id": "q6-telegram-bot",
+      "text": "telegram bot message sending and formatting",
+      "category": "channels",
+      "expectedResults": ["src/telegram/send", "src/telegram/bot", "docs/channels/telegram"]
+    },
+    {
+      "id": "q7-sandbox-security",
+      "text": "sandbox container isolation and security model",
+      "category": "security",
+      "expectedResults": ["src/security/sandbox/", "src/agents/sandbox", "docs/sandbox"]
+    },
+    {
+      "id": "q8-code-types",
+      "text": "TypeScript type definitions for config schema",
+      "category": "code",
+      "expectedResults": ["src/config/types", "src/config/zod-schema"]
+    },
+    {
+      "id": "q9-providers-claude",
+      "text": "Anthropic Claude API integration provider",
+      "category": "code",
+      "expectedResults": ["src/providers/anthropic/", "docs/providers"]
+    },
+    {
+      "id": "q10-docs-quickstart",
+      "text": "getting started installation setup guide",
+      "category": "docs",
+      "expectedResults": ["docs/quickstart", "docs/installation", "docs/getting-started"]
+    },
+    {
+      "id": "q11-memory-vectors",
+      "text": "vector embeddings storage and retrieval",
+      "category": "code",
+      "expectedResults": ["src/memory/hybrid", "src/memory/manager", "docs/memory"]
+    },
+    {
+      "id": "q12-skills-examples",
+      "text": "real-world skill implementation handler examples",
+      "category": "skills",
+      "expectedResults": ["skills/", "handler.ts", "SKILL.md"]
+    },
+    {
+      "id": "q13-infra-tls",
+      "text": "HTTPS TLS certificate configuration setup",
+      "category": "infrastructure",
+      "expectedResults": ["src/infra/tls/", "docs/tls", "docs/https"]
+    },
+    {
+      "id": "q14-agents-identity",
+      "text": "agent identity personality configuration workspace",
+      "category": "docs",
+      "expectedResults": ["docs/agents", "docs/workspaces", "docs/configuration"]
+    },
+    {
+      "id": "q15-plugins-runtime",
+      "text": "plugin system and runtime loading mechanism",
+      "category": "code",
+      "expectedResults": ["src/plugins/runtime/", "src/plugins/", "docs/plugins"]
+    },
+    {
+      "id": "q16-channels-multi",
+      "text": "multi-channel support Discord WhatsApp Telegram",
+      "category": "channels",
+      "expectedResults": ["src/channels/", "src/discord/", "src/whatsapp/", "docs/channels"]
+    },
+    {
+      "id": "q17-sessions-persistence",
+      "text": "conversation history persistence database storage",
+      "category": "code",
+      "expectedResults": ["src/sessions/", "src/memory/", "docs/sessions"]
+    },
+    {
+      "id": "q18-docs-architecture",
+      "text": "system architecture overview design patterns",
+      "category": "docs",
+      "expectedResults": ["docs/architecture", "docs/design", "docs/overview"]
+    },
+    {
+      "id": "q19-security-permissions",
+      "text": "security permissions access control authentication",
+      "category": "security",
+      "expectedResults": ["src/security/", "docs/security", "docs/permissions"]
+    },
+    {
+      "id": "q20-gateway-rpc",
+      "text": "gateway RPC server methods API endpoints",
+      "category": "code",
+      "expectedResults": ["src/gateway/server-methods/", "src/gateway/server"]
+    }
+  ]
+}

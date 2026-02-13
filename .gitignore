@@ -1,0 +1,44 @@
+# Environment & Secrets
+.env
+*.key
+*.pem
+
+# Database (contains indexed content)
+data/
+*.db
+*.db-shm
+*.db-wal
+
+# Dependencies
+node_modules/
+
+# Logs
+*.log
+npm-debug.log*
+log/sync.log
+
+# Test results
+test-results/
+coverage/
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+*~
+
+# Backup files
+*.backup
+*.bak
+*.tmp
