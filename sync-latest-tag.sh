@@ -31,12 +31,12 @@ if [ -f "$SCRIPT_DIR/.env" ]; then
     export $(grep -v '^#' "$SCRIPT_DIR/.env" | xargs)
 fi
 
-# Use env var or default to sibling directory
-UPSTREAM_DIR="${UPSTREAM_DIR:-$(dirname "$SCRIPT_DIR")/source}"
+# Use env var or default to source directory inside this repo
+UPSTREAM_DIR="${UPSTREAM_DIR:-$SCRIPT_DIR/source}"
 
 if [ ! -d "$UPSTREAM_DIR" ]; then
     echo "[kb-auto-update] ERROR: Upstream directory not found: $UPSTREAM_DIR"
-    echo "Set UPSTREAM_DIR in .env or clone OpenClaw to ../source/"
+    echo "Set UPSTREAM_DIR in .env or clone OpenClaw to source/"
     exit 1
 fi
 

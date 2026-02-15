@@ -36,8 +36,8 @@ npm install
 cp .env.example .env
 # Edit .env and add your OPENAI_API_KEY
 
-# Clone OpenClaw source (required for indexing)
-git clone https://github.com/openclaw/openclaw.git ../source
+# Clone OpenClaw source inside this repo (required for indexing)
+git clone https://github.com/openclaw/openclaw.git source
 
 # Run initial indexing (10-15 minutes)
 node index.js
@@ -357,7 +357,7 @@ Each result contains:
 ```json
 {
   "score": 0.85,          // Relevance score (0-1, higher = better)
-  "path": "docs/sandbox.md",  // File path relative to OpenClaw root
+  "path": "docs/sandbox.md",  // File path relative to OpenClaw source root
   "lines": "42-58",       // Line range in original file
   "source": "docs",       // Content category
   "snippet": "...",       // Text excerpt with context
@@ -365,11 +365,32 @@ Each result contains:
 }
 ```
 
+### 🔍 **IMPORTANT: Finding the Actual File**
+
+The `path` field is **relative to the OpenClaw source repository**, not the KB repository root.
+
+**To read the actual file on disk:**
+- Prepend `source/` to the returned path
+- Example: if query returns `"path": "docs/gateway/config.md"`
+  - ✓ Actual file: `source/docs/gateway/config.md`
+  - ✗ NOT at: `docs/gateway/config.md`
+
+**Full path resolution:**
+```bash
+# Query returns: docs/channels/telegram.md
+# Actual location: <kb-repo>/source/docs/channels/telegram.md
+
+# Example with environment variable:
+UPSTREAM_DIR=${UPSTREAM_DIR:-./source}
+FILE_PATH="$UPSTREAM_DIR/${QUERY_RESULT_PATH}"
+```
+
 **How to use:**
 1. **Check `score`** — Ignore results below 0.5 (low relevance)
 2. **Read `snippet`** — Quick answer might be here
 3. **Use `path:lines`** — Provide citation to user
-4. **Filter by `source`** — Validate answer type (docs vs code)
+4. **Read full file** — Prepend `source/` to path: `source/${path}`
+5. **Filter by `source`** — Validate answer type (docs vs code)
 
 ---
 

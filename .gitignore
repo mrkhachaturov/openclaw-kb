@@ -9,6 +9,9 @@ data/
 *.db-shm
 *.db-wal
 
+# Upstream OpenClaw source (tracked separately)
+source/
+
 # Dependencies
 node_modules/
 

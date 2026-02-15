@@ -5,7 +5,7 @@ set -euo pipefail
 
 # Detect KB directory (script location)
 KB_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-UPSTREAM_DIR="$(dirname "$KB_DIR")/source"
+UPSTREAM_DIR="$KB_DIR/source"
 SYNC_SCRIPT="$KB_DIR/sync-latest-tag.sh"
 
 # Detect platform

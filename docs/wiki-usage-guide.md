@@ -2,7 +2,7 @@
 
 > **Audience:** Claude Code and AI assistants working with OpenClaw.
 > **Purpose:** Comprehensive guide for deciding WHEN to query the KB, WHICH command to use, and HOW to interpret results.
-> **Related:** [upstream-knowledge.md](upstream-knowledge.md) contains a minimal agent workflow example.
+> **Related:** [openclaw-wiki.md](openclaw-wiki.md) contains a minimal agent workflow example.
 
 ## Overview
 

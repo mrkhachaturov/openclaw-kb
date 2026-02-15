@@ -44,7 +44,7 @@ cp .env.example .env
 # Edit .env and add your OPENAI_API_KEY
 
 # 4. Clone upstream OpenClaw source
-git clone https://github.com/openclaw/openclaw.git ../source
+git clone https://github.com/openclaw/openclaw.git source
 
 # 5. Run initial indexing
 node index.js
@@ -71,8 +71,8 @@ openclaw-kb/
 └── data/                  # SQLite database (auto-created)
     └── kb.db              # Vector index + chunks
 
-Sibling directory (required):
-../source/                 # OpenClaw git clone (tracked by sync script)
+Inside this repository (required):
+source/                    # OpenClaw git clone (tracked by sync script)
 ```
 
 ## Usage
@@ -164,13 +164,13 @@ See [AGENTS.md](AGENTS.md) for comprehensive integration guide with:
 **Quick example for Claude Code:**
 ```bash
 # Create agent config
-cp docs/upstream-knowledge.md ~/.claude/agents/
+cp docs/openclaw-wiki.md ~/.claude/agents/
 
 # Use in Claude Code
-@upstream-knowledge "How to configure sandbox?"
+@openclaw-wiki "How to configure sandbox?"
 ```
 
-See [docs/upstream-knowledge.md](docs/upstream-knowledge.md) for Claude Code agent example.
+See [docs/openclaw-wiki.md](docs/openclaw-wiki.md) for Claude Code agent example.
 
 ## justfile Integration (Optional)
 
@@ -320,7 +320,7 @@ node check-chunks.js
 ## Troubleshooting
 
 **"No results found"**
-- Check that upstream source is cloned: `ls ../source`
+- Check that upstream source is cloned: `ls source`
 - Verify indexing completed: `node query.js --stats`
 
 **"OpenAI API error"**

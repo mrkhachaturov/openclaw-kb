@@ -46,7 +46,7 @@ cp .env.example .env
 # Отредактировать .env и добавить OPENAI_API_KEY
 
 # 4. Клонировать upstream OpenClaw код
-git clone https://github.com/openclaw/openclaw.git ../source
+git clone https://github.com/openclaw/openclaw.git source
 
 # 5. Запустить начальную индексацию
 node index.js
@@ -73,8 +73,8 @@ openclaw-kb/
 └── data/                  # База SQLite (создается автоматически)
     └── kb.db              # Векторный индекс + чанки
 
-Соседняя директория (обязательно):
-../source/                 # Клон OpenClaw git (отслеживается sync скриптом)
+Внутри этого репозитория (обязательно):
+source/                    # Клон OpenClaw git (отслеживается sync скриптом)
 ```
 
 ## Использование
@@ -166,13 +166,13 @@ kb-code query *args:
 **Быстрый пример для Claude Code:**
 ```bash
 # Создать конфигурацию агента
-cp docs/upstream-knowledge.md ~/.claude/agents/
+cp docs/openclaw-wiki.md ~/.claude/agents/
 
 # Использовать в Claude Code
-@upstream-knowledge "Как настроить sandbox?"
+@openclaw-wiki "Как настроить sandbox?"
 ```
 
-См. [docs/upstream-knowledge.md](docs/upstream-knowledge.md) для примера Claude Code агента.
+См. [docs/openclaw-wiki.md](docs/openclaw-wiki.md) для примера Claude Code агента.
 
 ## Интеграция с justfile (опционально)
 
@@ -322,7 +322,7 @@ node check-chunks.js
 ## Устранение неполадок
 
 **"Результаты не найдены"**
-- Проверьте что upstream код клонирован: `ls ../source`
+- Проверьте что upstream код клонирован: `ls source`
 - Убедитесь что индексация завершена: `node query.js --stats`
 
 **"Ошибка OpenAI API"**

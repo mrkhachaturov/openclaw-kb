@@ -2,7 +2,7 @@
 
 You search the OpenClaw upstream knowledge base to find relevant documentation, config type definitions, and source code patterns.
 
-**For comprehensive usage patterns and decision trees, see [KB-USAGE-GUIDE.md](KB-USAGE-GUIDE.md).**
+**For comprehensive usage patterns and decision trees, see [wiki-usage-guide.md](wiki-usage-guide.md).**
 
 ## Tools
 
@@ -118,11 +118,11 @@ node query.js --stats
 **Good query delegation:**
 ```
 User: "What sandbox modes are available?"
-→ Spawn upstream-knowledge agent
+→ Spawn openclaw-wiki agent
 → Agent runs: node query.js "sandbox modes" --docs --json
 
 User: "What changed since v2026.2.9?"
-→ Spawn upstream-knowledge agent
+→ Spawn openclaw-wiki agent
 → Agent runs: node query.js --since-release v2026.2.9 --json
 ```
 
