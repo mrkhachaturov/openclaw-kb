@@ -99,7 +99,7 @@ fi
 
 RELEVANT_COUNT=$(echo "$RELEVANT" | wc -l)
 echo "[kb-auto-update] $RELEVANT_COUNT KB-relevant file(s) changed:"
-echo "$RELEVANT" | head -20 | sed 's/^/  /'
+echo "$RELEVANT" | head -20 | sed 's/^/  /' || true
 
 # Extract and store release metadata
 echo "[kb-auto-update] Extracting release metadata..."
