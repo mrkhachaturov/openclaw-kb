@@ -5,8 +5,15 @@ set -euo pipefail
 
 # Detect KB directory (script location)
 KB_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-UPSTREAM_DIR="$KB_DIR/source"
 SYNC_SCRIPT="$KB_DIR/sync-latest-tag.sh"
+
+# Load .env to get UPSTREAM_DIR if customized
+if [ -f "$KB_DIR/.env" ]; then
+    export $(grep -v '^#' "$KB_DIR/.env" | grep -v '^$' | xargs)
+fi
+
+# Use env var or default to source directory
+UPSTREAM_DIR="${UPSTREAM_DIR:-$KB_DIR/source}"
 
 # Detect platform
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
@@ -25,17 +32,36 @@ if [ ! -f "$SYNC_SCRIPT" ]; then
     exit 1
 fi
 
-if [ ! -d "$UPSTREAM_DIR" ]; then
-    echo "ERROR: Upstream source not found at $UPSTREAM_DIR"
-    echo "Please clone OpenClaw first:"
-    echo "  git clone https://github.com/openclaw/openclaw.git \"$UPSTREAM_DIR\""
-    exit 1
-fi
-
 if [ ! -f "$KB_DIR/.env" ]; then
     echo "ERROR: .env file not found at $KB_DIR/.env"
     echo "Please create .env with your OPENAI_API_KEY"
     exit 1
+fi
+
+# Clone upstream OpenClaw if not present
+if [ ! -d "$UPSTREAM_DIR" ]; then
+    echo "Upstream source not found, cloning OpenClaw..."
+    git clone https://github.com/openclaw/openclaw.git "$UPSTREAM_DIR"
+
+    if [ $? -ne 0 ]; then
+        echo "ERROR: Failed to clone OpenClaw repository"
+        exit 1
+    fi
+
+    echo "✓ Repository cloned"
+
+    # Fetch tags and checkout latest release
+    cd "$UPSTREAM_DIR"
+    git fetch origin --tags --quiet
+
+    LATEST_TAG=$(git tag --list 'v2026.*' --sort=-v:refname | head -1)
+    if [ -n "$LATEST_TAG" ]; then
+        echo "Checking out latest release: $LATEST_TAG..."
+        git checkout "$LATEST_TAG" --quiet 2>&1 | grep -v "detached HEAD" || true
+        echo "✓ Upstream ready at $LATEST_TAG"
+    fi
+
+    cd "$KB_DIR"
 fi
 
 echo "OpenClaw KB Auto-Update Installer"

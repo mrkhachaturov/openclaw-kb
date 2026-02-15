@@ -44,6 +44,13 @@ async function main() {
     process.exit(1);
   }
 
+  // Verify upstream source exists
+  if (!existsSync(UPSTREAM_ROOT)) {
+    console.error(`Error: Upstream source not found at ${UPSTREAM_ROOT}`);
+    console.error('Run ./install.sh first to set up the knowledge base');
+    process.exit(1);
+  }
+
   openDb();
 
   // Determine current release tag

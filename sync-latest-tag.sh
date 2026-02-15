@@ -34,9 +34,16 @@ fi
 # Use env var or default to source directory inside this repo
 UPSTREAM_DIR="${UPSTREAM_DIR:-$SCRIPT_DIR/source}"
 
+# Verify upstream exists (should be set up by install.sh)
 if [ ! -d "$UPSTREAM_DIR" ]; then
     echo "[kb-auto-update] ERROR: Upstream directory not found: $UPSTREAM_DIR"
-    echo "Set UPSTREAM_DIR in .env or clone OpenClaw to source/"
+    echo "Run ./install.sh first to set up the knowledge base"
+    exit 1
+fi
+
+# Verify it's a valid git repository
+if [ ! -d "$UPSTREAM_DIR/.git" ]; then
+    echo "[kb-auto-update] ERROR: $UPSTREAM_DIR exists but is not a git repository"
     exit 1
 fi
 
