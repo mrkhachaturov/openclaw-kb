@@ -88,6 +88,29 @@ These are registered as separate commander subcommands that delegate to the quer
 
 Exit code `3` allows scripts and skills to detect empty results and try alternative searches without parsing output.
 
+### Database Behavior
+
+openclaw-kb never creates a fresh DB if one already exists at `$KB_DATA_DIR/upstream.db`. It opens the existing DB and appends/updates incrementally. First run on a fresh install with no existing DB → `index` or `sync` creates it. Subsequent runs → incremental updates only.
+
+This means you can copy a pre-built `upstream.db` (e.g., 582MB) to a new machine and immediately query it without waiting for a full reindex.
+
+### OPENAI_API_KEY Requirements
+
+The API key is only needed for write operations — not reads:
+
+| Command | Needs `OPENAI_API_KEY`? |
+|---------|------------------------|
+| `query` / aliases | No — reads existing embeddings |
+| `stats` | No |
+| `latest` | No |
+| `history` | No |
+| `since` | No |
+| `index` | **Yes** — generates embeddings |
+| `sync` | **Yes** — may trigger reindex |
+| `install-service` | No (but the generated service needs it at runtime) |
+
+Read-only commands must not check for or require the API key. If `OPENAI_API_KEY` is missing and a write command is invoked, fail with exit code `2` and message: `"OPENAI_API_KEY is required for indexing. Set it in your environment or pass --env-file."`.
+
 ### Configuration Precedence
 
 CLI flags → environment variables → defaults.
