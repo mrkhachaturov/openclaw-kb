@@ -94,6 +94,8 @@ openclaw-kb never creates a fresh DB if one already exists at `$KB_DATA_DIR/upst
 
 This means you can copy a pre-built `upstream.db` (e.g., 582MB) to a new machine and immediately query it without waiting for a full reindex.
 
+**Multi-machine setups:** Run `sync` on one machine (e.g., Linux server with a cron/timer) and distribute the DB file via Syncthing, rsync, S3, or shared NAS. Read-only commands (`query`, `stats`, `latest`, `history`, `since`) work without `OPENAI_API_KEY` and without network access — they are pure SQLite reads against the local DB file.
+
 ### OPENAI_API_KEY Requirements
 
 The API key is only needed for write operations — not reads:
