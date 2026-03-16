@@ -302,13 +302,16 @@ Each `commands/*.js` file exports a function that receives the `program` instanc
 ## Usage After Publishing
 
 ```bash
-# Install globally
-npm install -g openclaw-kb
-
-# Or via mise
+# Install via mise (recommended — no global pollution)
 # mise.toml:
 # [tools]
 # "npm:openclaw-kb" = "latest"
+# [env]
+# UPSTREAM_DIR = "{{ config_root }}/build/openclaw/.upstream"
+# KB_DATA_DIR = "{{ config_root }}/data/kb"
+
+# Or install globally (not recommended)
+# npm install -g openclaw-kb
 
 # Configure
 export UPSTREAM_DIR=/path/to/openclaw/checkout
@@ -479,8 +482,7 @@ When `local` is selected:
 After publishing, verify:
 
 ```bash
-# CLI basics
-npm install -g openclaw-kb
+# CLI basics (via mise-managed install or npm link for dev)
 openclaw-kb --version                          # prints 1.1.0
 openclaw-kb --help                             # shows all subcommands
 openclaw-kb query --help                       # shows query flags
