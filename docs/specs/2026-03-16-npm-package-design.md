@@ -56,7 +56,37 @@ openclaw-kb latest
 openclaw-kb history
 openclaw-kb since <version>
 openclaw-kb install-service [--interval <duration>] [--env-file <path>] [--upstream-dir <path>] [--data-dir <path>]
+
+# Short aliases (skill-friendly)
+openclaw-kb docs <text> [--json] [--top N]
+openclaw-kb code <text> [--json] [--top N]
+openclaw-kb skills <text> [--json] [--top N]
+openclaw-kb verify <text> [--json] [--top N]
 ```
+
+### Short Aliases
+
+Common filter combinations get top-level aliases for skill/justfile integration:
+
+```
+openclaw-kb docs <text>     → alias for: openclaw-kb query <text> --docs
+openclaw-kb code <text>     → alias for: openclaw-kb query <text> --code
+openclaw-kb skills <text>   → alias for: openclaw-kb query <text> --skills
+openclaw-kb verify <text>   → alias for: openclaw-kb query <text> --verify
+```
+
+These are registered as separate commander subcommands that delegate to the query handler with the appropriate filter pre-set. They accept the same `--json`, `--top N` flags as `query`.
+
+### Exit Codes
+
+| Exit Code | Meaning |
+|-----------|---------|
+| `0` | Success |
+| `1` | Runtime error (API failure, git error, DB error) |
+| `2` | Configuration error (missing `UPSTREAM_DIR`, `OPENAI_API_KEY`, etc.) |
+| `3` | No results found (for `query` and alias commands) |
+
+Exit code `3` allows scripts and skills to detect empty results and try alternative searches without parsing output.
 
 ### Configuration Precedence
 
@@ -384,6 +414,12 @@ npm install -g openclaw-kb
 openclaw-kb --version                          # prints 1.1.0
 openclaw-kb --help                             # shows all subcommands
 openclaw-kb query --help                       # shows query flags
+
+# Short aliases
+openclaw-kb docs "sandbox configuration"       # same as query --docs
+openclaw-kb code "TtsProviderSchema"           # same as query --code
+openclaw-kb verify "session persistence"       # same as query --verify
+openclaw-kb docs "nonexistent xyz"; echo $?    # exit code 3 = no results
 
 # Core workflow
 openclaw-kb sync --upstream-dir /path --data-dir /path
