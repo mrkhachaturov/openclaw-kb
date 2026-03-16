@@ -1,7 +1,7 @@
 # openclaw-kb npm Package Design
 
 **Date:** 2026-03-16
-**Status:** Approved
+**Status:** Implemented
 **Goal:** Publish openclaw-kb as a standalone npm CLI tool installable via `npm install -g openclaw-kb` or `mise`.
 
 ## Overview
