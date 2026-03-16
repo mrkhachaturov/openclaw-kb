@@ -23,7 +23,7 @@ const { values: flags } = parseArgs({
 
 async function main() {
   // Load test queries
-  const testData = JSON.parse(readFileSync('test-queries.json', 'utf-8'));
+  const testData = JSON.parse(readFileSync(new URL('./test-queries.json', import.meta.url), 'utf-8'));
   const queries = testData.queries;
 
   console.log('=== KB Model Evaluation ===\n');
