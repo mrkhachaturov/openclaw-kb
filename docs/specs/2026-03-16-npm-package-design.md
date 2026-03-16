@@ -6,7 +6,13 @@
 
 ## Overview
 
-Convert the current repo-local scripts into a proper npm package with a single `openclaw-kb` binary exposing all functionality as subcommands. The core `lib/` modules (chunker, embedder, db, config, synonyms, release-parser) remain unchanged. Shell scripts are replaced with Node.js equivalents.
+Convert the current repo-local scripts into a proper npm package with a single `openclaw-kb` binary exposing all functionality as subcommands. Shell scripts are replaced with Node.js equivalents.
+
+The core `lib/` modules remain unchanged except for:
+- `config.js` — add `KB_LOG_DIR` env var, add iOS/macOS/shared sources (see below)
+- `chunker.js` — add version-bounded chunking for CHANGELOG.md
+
+**Important:** When installed globally via npm, the `__dirname`-relative defaults in `config.js` resolve inside `node_modules/`, which is not useful. Therefore `UPSTREAM_DIR` and `KB_DATA_DIR` are effectively **required** for global installs — there are no sensible defaults. The CLI should validate these paths exist at startup and print a clear error message if missing.
 
 ## File Structure
 
@@ -23,7 +29,7 @@ openclaw-kb/
 │   ├── history.js               # last 10 releases
 │   ├── since.js                 # changes since <version>
 │   └── install-service.js       # generate systemd/launchd files
-├── lib/                         # UNCHANGED
+├── lib/                         # minor changes (config.js, chunker.js)
 │   ├── config.js
 │   ├── chunker.js
 │   ├── embedder.js
@@ -42,7 +48,7 @@ openclaw-kb/
 ## CLI Interface
 
 ```
-openclaw-kb query <text> [--docs|--code|--skills|--releases|--verify] [--json] [--top N]
+openclaw-kb query <text> [--docs|--code|--skills|--ios|--macos|--shared|--releases|--verify] [--json] [--top N]
 openclaw-kb index [--force] [--release <tag>]
 openclaw-kb sync [--upstream-dir <path>] [--data-dir <path>]
 openclaw-kb stats
@@ -68,10 +74,13 @@ Performs hybrid search (vector + keyword + RRF fusion). Extracts handler logic f
 | `--docs` | Filter to content type `docs` |
 | `--code` | Filter to content type `code` |
 | `--skills` | Filter to content type `skill` |
+| `--ios` | Filter to source `ios` |
+| `--macos` | Filter to source `macos` |
+| `--shared` | Filter to source `shared` |
 | `--releases` | Filter to source `release` |
-| `--verify` | Filter to `docs` + `code` combined |
+| `--verify` | Two-pass search: first docs, then a second search for related code appended to results |
 | `--json` | Output JSON instead of human-readable |
-| `--top N` | Number of results (default: 5) |
+| `--top N` | Number of results (default: 8, matching current behavior) |
 
 **`index`**
 Reindexes the knowledge base. Extracts handler logic from current `scripts/index.js` into `commands/index.js`.
@@ -103,7 +112,7 @@ Shows what changed since the given version (new chunks, modified files).
 
 **`install-service`**
 Detects platform and generates service files:
-- **Linux:** systemd user timer + service unit
+- **Linux:** systemd **user-level** timer + service unit (`~/.config/systemd/user/`). This is intentionally user-level (not system-level like the old `install.sh`) because npm global installs should not require root.
 - **macOS:** launchd plist (LaunchAgent)
 
 The generated service invokes `openclaw-kb sync` with `--upstream-dir` and `--data-dir` flags baked in from the resolved values at generation time, making the service self-contained.
@@ -115,6 +124,8 @@ The generated service invokes `openclaw-kb sync` with `--upstream-dir` and `--da
 | `--upstream-dir <path>` | Baked into generated service file |
 | `--data-dir <path>` | Baked into generated service file |
 
+**`--env-file` behavior:** If omitted, the generated service will not include an `EnvironmentFile` directive (systemd) or env var dict (launchd). The command prints a warning: "No --env-file specified. The generated service will not have OPENAI_API_KEY set. You must ensure it is available via the shell environment or another mechanism."
+
 ## Environment Variables
 
 | Env Var | Purpose | Default |
@@ -125,16 +136,18 @@ The generated service invokes `openclaw-kb sync` with `--upstream-dir` and `--da
 | `KB_EMBEDDING_MODEL` | OpenAI embedding model | `text-embedding-3-small` |
 | `KB_LOG_DIR` | Override log directory | `$KB_DATA_DIR/log` |
 
-**New in config.js:** Add `KB_LOG_DIR` with default `path.join(KB_DATA_DIR, 'log')`.
+**Action required in config.js:** `KB_LOG_DIR` is a **new** env var. Change the existing `LOG_DIR` export to read from `process.env.KB_LOG_DIR` first, falling back to `path.join(KB_DATA_DIR, 'log')`. The current code derives `LOG_DIR` from `__dirname` when `KB_DATA_DIR` is unset, which breaks for global installs.
 
 All commands respect the precedence: CLI flags → env vars → defaults.
 
 ## package.json Changes
 
+The following fields are **added or changed** in package.json. All other existing fields (`type`, `description`, `repository`, `keywords`, `author`, `license`, `engines`, etc.) are **retained**.
+
 ```json
 {
-  "name": "openclaw-kb",
   "version": "1.1.0",
+  "main": "lib/db.js",
   "bin": {
     "openclaw-kb": "./bin/cli.js"
   },
@@ -145,6 +158,10 @@ All commands respect the precedence: CLI flags → env vars → defaults.
     "README.md",
     "LICENSE"
   ],
+  "scripts": {
+    "index": "node scripts/index.js",
+    "query": "node scripts/query.js"
+  },
   "dependencies": {
     "sqlite-vec": "0.1.7-alpha.2",
     "commander": "^13.0.0"
@@ -152,16 +169,32 @@ All commands respect the precedence: CLI flags → env vars → defaults.
 }
 ```
 
-The `files` whitelist replaces `.npmignore`. Only `bin/`, `commands/`, `lib/`, `README.md`, and `LICENSE` are published. `scripts/`, `docs/`, `data/`, `source/`, `log/`, `.env`, `test-queries.json`, and `scripts/tools/` are excluded.
+Key changes:
+- **Bump version** from 1.0.0 to 1.1.0 to reflect the CLI refactor
+- **Add `commander`** as a new dependency (zero transitive deps, ~50KB)
+- **Add `files` whitelist** — replaces `.npmignore`. Only published: `bin/`, `commands/`, `lib/`, `README.md`, `LICENSE`
+- **Update `bin`** to point to `bin/cli.js` instead of `scripts/query.js`
+- **Remove `sync` npm script** (was `bash scripts/sync-latest-tag.sh` — that file is deleted)
+- **Retain `"type": "module"`** — all source files use ESM imports
 
 ## Scripts Backward Compatibility
 
 `scripts/index.js` and `scripts/query.js` become thin wrappers:
 
+Each `commands/*.js` file exports two things:
+- **`register(program)`** — called by `bin/cli.js` to register the subcommand with commander
+- **`handler(options)`** — the actual logic, callable standalone
+
+The thin wrappers parse minimal args and call `handler()` directly:
+
 ```javascript
 // scripts/index.js
 import { handler } from '../commands/index.js';
-handler(process.argv.slice(2));
+
+const force = process.argv.includes('--force');
+const releaseIdx = process.argv.indexOf('--release');
+const release = releaseIdx !== -1 ? process.argv[releaseIdx + 1] : undefined;
+handler({ force, release });
 ```
 
 This ensures `npm run index` and `openclaw-kb index` execute identical code paths. No implementation duplication, no drift.
@@ -175,7 +208,7 @@ This ensures `npm run index` and `openclaw-kb index` execute identical code path
 
 ## Files Unchanged
 
-- `lib/*` — all core modules
+- `lib/embedder.js`, `lib/db.js`, `lib/synonyms.js`, `lib/release-parser.js`
 - `scripts/tools/*` — dev tools
 - `docs/*` — documentation
 - `.env.example`, `.gitignore`, `AGENTS.md`
@@ -300,15 +333,59 @@ WantedBy=timers.target
 </plist>
 ```
 
+## P0: iOS/macOS/Shared Sources
+
+**Problem:** The KB only indexes `src/`, `docs/`, `extensions/`, and `skills/`. It completely misses the Swift codebase (`apps/ios/`, `apps/macos/`, `apps/shared/`), making the KB useless for iOS development sessions.
+
+**Change in `lib/config.js`:** Add three new entries to the `SOURCES` array:
+
+```javascript
+{ name: 'ios',    globs: ['apps/ios/Sources/**/*.swift'],          exclude: ['**/*Tests*', '**/*Mock*'] },
+{ name: 'macos',  globs: ['apps/macos/Sources/**/*.swift'],        exclude: ['**/*Tests*', '**/*Mock*'] },
+{ name: 'shared', globs: ['apps/shared/**/*.swift', 'apps/shared/**/*.md'], exclude: ['**/*Tests*'] },
+```
+
+**Change in `commands/query.js`:** Add `--ios`, `--macos`, `--shared` filter flags. These set a `sourceFilter` value passed to `hybridSearch()` (same mechanism as `--releases`, not `--docs`/`--code`/`--skills` which use `contentTypeFilter`). Source filters (`--ios`, `--macos`, `--shared`, `--releases`) are mutually exclusive — if multiple are passed, the last one wins.
+
+**Change in `lib/chunker.js`:** Swift files should use the existing code chunking logic (1200 char max, function/class boundary detection). Add `'swift'` to `deriveMetadata()`: `.swift` files get `contentType: 'code'` and `language: 'swift'`.
+
+## P0: Version-Bounded Changelog Chunking
+
+**Problem:** CHANGELOG.md is chunked by line count (~30 lines). Version sections get split across chunks or merged together. When asking "what changed since v2026.2.21", the agent gets fragments spanning version boundaries.
+
+**Change in `lib/chunker.js`:** Add a special chunking path for CHANGELOG.md (detected by filename). Instead of the generic line-count chunker:
+
+1. Split the file by version heading pattern (e.g., `## v2026.3.8` or `## [v2026.3.8]`)
+2. Each version section becomes one chunk, regardless of length
+3. Tag each chunk with `version` metadata (e.g., `version: "v2026.3.8"`)
+4. Set `contentType: 'release'` for these chunks
+
+**Chunking logic:**
+
+```
+Input:  CHANGELOG.md (all versions concatenated)
+Split:  by /^## \[?v[\d.]+\]?/m pattern
+Output: one chunk per version section
+        chunk.metadata.version = extracted version string
+        chunk.contentType = 'release'
+```
+
+If a single version section exceeds the normal chunk size limit, it should still be kept as one chunk (version integrity > size limit). Changelog sections rarely exceed 3000 chars, so this is acceptable.
+
+**Storage of `version` metadata:** The `version` string is stored in the existing `metadata` JSON column of the `chunks` table (which already holds `contentType`, `language`, `category`). No schema migration needed — `metadata` is a freeform JSON field. The `version` key is added alongside the existing keys when chunking CHANGELOG.md.
+
 ## Testing Checklist
 
 After publishing, verify:
 
 ```bash
+# CLI basics
 npm install -g openclaw-kb
 openclaw-kb --version                          # prints 1.1.0
 openclaw-kb --help                             # shows all subcommands
 openclaw-kb query --help                       # shows query flags
+
+# Core workflow
 openclaw-kb sync --upstream-dir /path --data-dir /path
 openclaw-kb query "sandbox configuration" --docs
 openclaw-kb query "sandbox" --json
@@ -317,4 +394,14 @@ openclaw-kb latest
 openclaw-kb history
 openclaw-kb since v2026.1.0
 openclaw-kb install-service --interval 2h --upstream-dir /path --data-dir /path
+
+# P0: iOS/macOS/shared sources
+openclaw-kb query "TalkModeManager" --ios      # should find Swift results
+openclaw-kb query "Settings" --macos           # macOS source results
+openclaw-kb query "OpenClawKit" --shared       # shared package results
+openclaw-kb stats                              # should show ios/macos/shared source counts
+
+# P0: Changelog chunking
+openclaw-kb query "what changed in v2026.3.7" --releases  # should return complete version section
+openclaw-kb since v2026.2.21                   # should show version-bounded results
 ```
