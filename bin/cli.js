@@ -11,6 +11,14 @@ program
   .description('Self-updating vector knowledge base for OpenClaw')
   .version(pkg.version);
 
-// Subcommands will be registered here as they are implemented
+import { register as registerStats } from '../commands/stats.js';
+import { register as registerLatest } from '../commands/latest.js';
+import { register as registerHistory } from '../commands/history.js';
+import { register as registerSince } from '../commands/since.js';
+
+registerStats(program);
+registerLatest(program);
+registerHistory(program);
+registerSince(program);
 
 program.parse();
