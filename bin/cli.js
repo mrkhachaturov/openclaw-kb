@@ -31,4 +31,7 @@ registerVerify(program);
 import { register as registerIndex } from '../commands/index.js';
 registerIndex(program);
 
+import { register as registerSync } from '../commands/sync.js';
+registerSync(program);
+
 program.parse();
