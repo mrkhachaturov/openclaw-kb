@@ -9,8 +9,9 @@
 Convert the current repo-local scripts into a proper npm package with a single `openclaw-kb` binary exposing all functionality as subcommands. Shell scripts are replaced with Node.js equivalents.
 
 The core `lib/` modules remain unchanged except for:
-- `config.js` — add `KB_LOG_DIR` env var, add iOS/macOS/shared sources (see below)
+- `config.js` — add `KB_LOG_DIR`, `KB_EMBEDDING_PROVIDER`, `KB_LOCAL_MODEL` env vars; add iOS/macOS/shared sources
 - `chunker.js` — add version-bounded chunking for CHANGELOG.md
+- `embedder.js` — refactor to provider abstraction (OpenAI + local ONNX)
 
 **Important:** When installed globally via npm, the `__dirname`-relative defaults in `config.js` resolve inside `node_modules/`, which is not useful. Therefore `UPSTREAM_DIR` and `KB_DATA_DIR` are effectively **required** for global installs — there are no sensible defaults. The CLI should validate these paths exist at startup and print a clear error message if missing.
 
@@ -102,14 +103,17 @@ The API key is needed for any command that calls the OpenAI embeddings API:
 
 | Command | Needs `OPENAI_API_KEY`? | Why |
 |---------|------------------------|-----|
-| `query` / aliases | **Yes** — embeds the query text | One small API call to vectorize the search string |
-| `query --offline` | No | FTS-only keyword search, skips vector embedding |
+| `query` / aliases | **Yes** (if `openai` provider) | One small API call to vectorize the search string |
+| `query` (local provider) | No | Uses local ONNX model, no network needed |
+| `query --offline` | No | FTS-only keyword search, skips embedding entirely |
 | `stats` | No | Pure SQLite read |
 | `latest` | No | Pure SQLite read |
 | `history` | No | Pure SQLite read |
 | `since` | No | Pure SQLite read |
-| `index` | **Yes** | Bulk embedding generation |
-| `sync` | **Yes** | May trigger reindex |
+| `index` | **Yes** (if `openai` provider) | Bulk embedding generation |
+| `index` (local provider) | No | Uses local ONNX model |
+| `sync` | **Yes** (if `openai` provider) | May trigger reindex |
+| `sync` (local provider) | No | Uses local ONNX model |
 | `install-service` | No | But the generated service needs it at runtime |
 
 Metadata commands (`stats`, `latest`, `history`, `since`) never require the API key. If `OPENAI_API_KEY` is missing and a command that needs it is invoked, fail with exit code `2` and message: `"OPENAI_API_KEY is required. Set it in your environment or pass --env-file."`.
@@ -194,6 +198,8 @@ The generated service invokes `openclaw-kb sync` with `--upstream-dir` and `--da
 | `OPENAI_API_KEY` | For embedding generation | required |
 | `KB_EMBEDDING_MODEL` | OpenAI embedding model | `text-embedding-3-small` |
 | `KB_LOG_DIR` | Override log directory | `$KB_DATA_DIR/log` |
+| `KB_EMBEDDING_PROVIDER` | Embedding backend (`openai` or `local`) | `openai` |
+| `KB_LOCAL_MODEL` | ONNX model name when provider is `local` | `all-MiniLM-L6-v2` |
 
 **Action required in config.js:** `KB_LOG_DIR` is a **new** env var. Change the existing `LOG_DIR` export to read from `process.env.KB_LOG_DIR` first, falling back to `path.join(KB_DATA_DIR, 'log')`. The current code derives `LOG_DIR` from `__dirname` when `KB_DATA_DIR` is unset, which breaks for global installs.
 
@@ -267,7 +273,7 @@ This ensures `npm run index` and `openclaw-kb index` execute identical code path
 
 ## Files Unchanged
 
-- `lib/embedder.js`, `lib/db.js`, `lib/synonyms.js`, `lib/release-parser.js`
+- `lib/db.js`, `lib/synonyms.js`, `lib/release-parser.js`
 - `scripts/tools/*` — dev tools
 - `docs/*` — documentation
 - `.env.example`, `.gitignore`, `AGENTS.md`
@@ -433,13 +439,11 @@ If a single version section exceeds the normal chunk size limit, it should still
 
 **Storage of `version` metadata:** The `version` string is stored in the existing `metadata` JSON column of the `chunks` table (which already holds `contentType`, `language`, `category`). No schema migration needed — `metadata` is a freeform JSON field. The `version` key is added alongside the existing keys when chunking CHANGELOG.md.
 
-## Future: Local Embedding Provider (P1)
+## Local Embedding Provider
 
-> **Not in v1.1.0.** Documented here so `lib/embedder.js` is designed with provider abstraction in mind.
+**Problem:** `--offline` gives FTS-only results (keyword matching). Quality is significantly lower than hybrid search. On macOS with Apple Silicon, a local embedding model provides near-hybrid quality without any API calls.
 
-**Problem:** `--offline` gives FTS-only results (keyword matching). Quality is significantly lower than hybrid search. On macOS with Apple Silicon, a local embedding model could provide near-hybrid quality without any API calls.
-
-**Approach:** Add `KB_EMBEDDING_PROVIDER` env var:
+**New env var:** `KB_EMBEDDING_PROVIDER`
 
 ```
 KB_EMBEDDING_PROVIDER=openai  → current behavior (default)
@@ -452,14 +456,23 @@ When `local` is selected:
 - No API key needed — fully offline index + query
 - On macOS Apple Silicon, ONNX uses CoreML/Metal for GPU acceleration
 
-**Compatibility:** A DB built with `local` embeddings is **not** compatible with one built with `openai` (different dimensions). The DB should store the embedding provider/model in a metadata table — switching providers requires a full reindex.
+**Compatibility:** A DB built with `local` embeddings is **not** compatible with one built with `openai` (different dimensions). The DB stores the embedding provider/model in a metadata table — switching providers requires a full reindex.
 
-**Implementation notes:**
-- `onnxruntime-node` as an **optional** dependency (not required for v1.1.0)
+**Implementation:**
+- `onnxruntime-node` as an **optional** dependency (listed in `optionalDependencies`)
 - If `KB_EMBEDDING_PROVIDER=local` and onnxruntime not installed → exit code 2 with install instructions
 - If `KB_EMBEDDING_PROVIDER=openai` → current behavior, onnxruntime never loaded
 
-**v1.1.0 design requirement:** `lib/embedder.js` should export a clean `embedQuery(text)` / `embedAll(texts)` interface that abstracts the provider. The rest of the codebase calls these functions without knowing whether embeddings come from OpenAI or ONNX. This makes the provider swap a single-file change later.
+**Change in `lib/embedder.js`:** Refactor to export a clean `embedQuery(text)` / `embedAll(texts)` interface that abstracts the provider. Internally, a provider is selected based on `KB_EMBEDDING_PROVIDER`. The rest of the codebase calls these functions without knowing whether embeddings come from OpenAI or ONNX.
+
+**Change in `lib/config.js`:** Add `KB_EMBEDDING_PROVIDER` (default: `openai`) and `KB_LOCAL_MODEL` (default: `all-MiniLM-L6-v2`) to exported config.
+
+**Change in env var table:**
+
+| Env Var | Purpose | Default |
+|---------|---------|---------|
+| `KB_EMBEDDING_PROVIDER` | Embedding backend (`openai` or `local`) | `openai` |
+| `KB_LOCAL_MODEL` | ONNX model name when provider is `local` | `all-MiniLM-L6-v2` |
 
 ## Testing Checklist
 
@@ -497,4 +510,9 @@ openclaw-kb stats                              # should show ios/macos/shared so
 # P0: Changelog chunking
 openclaw-kb query "what changed in v2026.3.7" --releases  # should return complete version section
 openclaw-kb since v2026.2.21                   # should show version-bounded results
+
+# Local embedding provider
+KB_EMBEDDING_PROVIDER=local openclaw-kb index --force  # full reindex with ONNX, no API key
+KB_EMBEDDING_PROVIDER=local openclaw-kb query "sandbox" --docs  # local query embedding
+openclaw-kb query "sandbox" --offline          # FTS-only, no embedding at all
 ```
