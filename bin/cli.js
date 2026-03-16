@@ -34,4 +34,7 @@ registerIndex(program);
 import { register as registerSync } from '../commands/sync.js';
 registerSync(program);
 
+import { register as registerInstallService } from '../commands/install-service.js';
+registerInstallService(program);
+
 program.parse();
