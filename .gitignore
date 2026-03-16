@@ -12,13 +12,16 @@ data/
 # Upstream OpenClaw source (tracked separately)
 source/
 
+# Documentation (specs, plans — local only)
+docs/
+
 # Dependencies
 node_modules/
 
 # Logs
+log/
 *.log
 npm-debug.log*
-log/sync.log
 
 # Test results
 test-results/
@@ -26,19 +29,12 @@ coverage/
 
 # OS files
 .DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
 Thumbs.db
 
 # Editor files
 .vscode/
 .idea/
 *.swp
-*.swo
-*.swn
 *~
 
 # Backup files
