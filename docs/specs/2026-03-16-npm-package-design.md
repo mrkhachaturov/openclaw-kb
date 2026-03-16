@@ -48,7 +48,7 @@ openclaw-kb/
 ## CLI Interface
 
 ```
-openclaw-kb query <text> [--docs|--code|--skills|--ios|--macos|--shared|--releases|--verify] [--json] [--top N]
+openclaw-kb query <text> [--docs|--code|--skills|--ios|--macos|--shared|--releases|--verify] [--json] [--top N] [--offline]
 openclaw-kb index [--force] [--release <tag>]
 openclaw-kb sync [--upstream-dir <path>] [--data-dir <path>]
 openclaw-kb stats
@@ -94,24 +94,27 @@ openclaw-kb never creates a fresh DB if one already exists at `$KB_DATA_DIR/upst
 
 This means you can copy a pre-built `upstream.db` (e.g., 582MB) to a new machine and immediately query it without waiting for a full reindex.
 
-**Multi-machine setups:** Run `sync` on one machine (e.g., Linux server with a cron/timer) and distribute the DB file via Syncthing, rsync, S3, or shared NAS. Read-only commands (`query`, `stats`, `latest`, `history`, `since`) work without `OPENAI_API_KEY` and without network access — they are pure SQLite reads against the local DB file.
+**Multi-machine setups:** Run `sync` on one machine (e.g., Linux server with a cron/timer) and distribute the DB file via Syncthing, rsync, S3, or shared NAS. Metadata commands (`stats`, `latest`, `history`, `since`) work without `OPENAI_API_KEY` and without network access. For queries on read-only consumers without an API key, use `openclaw-kb query --offline` for FTS-only keyword search.
 
 ### OPENAI_API_KEY Requirements
 
-The API key is only needed for write operations — not reads:
+The API key is needed for any command that calls the OpenAI embeddings API:
 
-| Command | Needs `OPENAI_API_KEY`? |
-|---------|------------------------|
-| `query` / aliases | No — reads existing embeddings |
-| `stats` | No |
-| `latest` | No |
-| `history` | No |
-| `since` | No |
-| `index` | **Yes** — generates embeddings |
-| `sync` | **Yes** — may trigger reindex |
-| `install-service` | No (but the generated service needs it at runtime) |
+| Command | Needs `OPENAI_API_KEY`? | Why |
+|---------|------------------------|-----|
+| `query` / aliases | **Yes** — embeds the query text | One small API call to vectorize the search string |
+| `query --offline` | No | FTS-only keyword search, skips vector embedding |
+| `stats` | No | Pure SQLite read |
+| `latest` | No | Pure SQLite read |
+| `history` | No | Pure SQLite read |
+| `since` | No | Pure SQLite read |
+| `index` | **Yes** | Bulk embedding generation |
+| `sync` | **Yes** | May trigger reindex |
+| `install-service` | No | But the generated service needs it at runtime |
 
-Read-only commands must not check for or require the API key. If `OPENAI_API_KEY` is missing and a write command is invoked, fail with exit code `2` and message: `"OPENAI_API_KEY is required for indexing. Set it in your environment or pass --env-file."`.
+Metadata commands (`stats`, `latest`, `history`, `since`) never require the API key. If `OPENAI_API_KEY` is missing and a command that needs it is invoked, fail with exit code `2` and message: `"OPENAI_API_KEY is required. Set it in your environment or pass --env-file."`.
+
+**`--offline` flag (query only):** Skips vector search entirely and uses FTS-only (BM25 keyword matching). No API calls, no network access. Results are lower quality than hybrid search but work completely offline and without an API key. Useful for multi-machine setups where a read-only consumer has a synced DB but no OpenAI key configured.
 
 ### Configuration Precedence
 
@@ -136,6 +139,7 @@ Performs hybrid search (vector + keyword + RRF fusion). Extracts handler logic f
 | `--verify` | Two-pass search: first docs, then a second search for related code appended to results |
 | `--json` | Output JSON instead of human-readable |
 | `--top N` | Number of results (default: 8, matching current behavior) |
+| `--offline` | FTS-only keyword search, no OpenAI API call needed |
 
 **`index`**
 Reindexes the knowledge base. Extracts handler logic from current `scripts/index.js` into `commands/index.js`.
