@@ -433,6 +433,34 @@ If a single version section exceeds the normal chunk size limit, it should still
 
 **Storage of `version` metadata:** The `version` string is stored in the existing `metadata` JSON column of the `chunks` table (which already holds `contentType`, `language`, `category`). No schema migration needed — `metadata` is a freeform JSON field. The `version` key is added alongside the existing keys when chunking CHANGELOG.md.
 
+## Future: Local Embedding Provider (P1)
+
+> **Not in v1.1.0.** Documented here so `lib/embedder.js` is designed with provider abstraction in mind.
+
+**Problem:** `--offline` gives FTS-only results (keyword matching). Quality is significantly lower than hybrid search. On macOS with Apple Silicon, a local embedding model could provide near-hybrid quality without any API calls.
+
+**Approach:** Add `KB_EMBEDDING_PROVIDER` env var:
+
+```
+KB_EMBEDDING_PROVIDER=openai  → current behavior (default)
+KB_EMBEDDING_PROVIDER=local   → ONNX model for both index and query
+```
+
+When `local` is selected:
+- `lib/embedder.js` loads an ONNX model (e.g., `all-MiniLM-L6-v2`, 384 dims) via `onnxruntime-node` or `@xenova/transformers`
+- Embeddings are smaller (384 vs 1536), so the DB is also smaller
+- No API key needed — fully offline index + query
+- On macOS Apple Silicon, ONNX uses CoreML/Metal for GPU acceleration
+
+**Compatibility:** A DB built with `local` embeddings is **not** compatible with one built with `openai` (different dimensions). The DB should store the embedding provider/model in a metadata table — switching providers requires a full reindex.
+
+**Implementation notes:**
+- `onnxruntime-node` as an **optional** dependency (not required for v1.1.0)
+- If `KB_EMBEDDING_PROVIDER=local` and onnxruntime not installed → exit code 2 with install instructions
+- If `KB_EMBEDDING_PROVIDER=openai` → current behavior, onnxruntime never loaded
+
+**v1.1.0 design requirement:** `lib/embedder.js` should export a clean `embedQuery(text)` / `embedAll(texts)` interface that abstracts the provider. The rest of the codebase calls these functions without knowing whether embeddings come from OpenAI or ONNX. This makes the provider swap a single-file change later.
+
 ## Testing Checklist
 
 After publishing, verify:
