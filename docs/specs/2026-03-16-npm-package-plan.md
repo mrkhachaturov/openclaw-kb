@@ -6,7 +6,7 @@
 
 **Architecture:** Single `bin/cli.js` entry point registers commander subcommands from `commands/*.js`. Each command exports `register(program)` + `handler(options)`. Existing `lib/` gets targeted changes (config, chunker, embedder). Shell scripts replaced with Node.js.
 
-**Tech Stack:** Node.js >=18, commander, sqlite-vec, onnxruntime-node (optional), @xenova/transformers (optional)
+**Tech Stack:** Node.js >=18, commander, sqlite-vec, onnxruntime-node (optional), @huggingface/transformers (optional)
 
 **Spec:** `docs/specs/2026-03-16-npm-package-design.md`
 
@@ -121,15 +121,15 @@ git commit -m "feat(config): add KB_LOG_DIR, embedding provider, iOS/macOS/share
 
 - [ ] **Step 1: Install commander**
 
-Run: `npm install commander`
+Run: `npm install commander@^14.0.0`
 
 - [ ] **Step 2: Update package.json fields**
 
-Change `version` to `"1.1.0"`. Change `main` to `"lib/db.js"`. Change `bin` to `{ "openclaw-kb": "./bin/cli.js" }`. Add `files` array: `["bin/", "commands/", "lib/", "README.md", "LICENSE"]`. Remove the `sync` script from `scripts`. Add `@xenova/transformers` to `optionalDependencies` (used by the local embedding provider in Task 9):
+Change `version` to `"1.1.0"`. Change `main` to `"lib/db.js"`. Change `bin` to `{ "openclaw-kb": "./bin/cli.js" }`. Add `files` array: `["bin/", "commands/", "lib/", "README.md", "LICENSE"]`. Remove the `sync` script from `scripts`. Add `@huggingface/transformers` to `optionalDependencies` (used by the local embedding provider in Task 9):
 
 ```json
 "optionalDependencies": {
-  "@xenova/transformers": "^2.17.0"
+  "@huggingface/transformers": "^3.8.0"
 }
 ```
 
@@ -470,12 +470,12 @@ let localPipeline = null;
 async function getLocalPipeline() {
   if (localPipeline) return localPipeline;
   try {
-    const { pipeline } = await import('@xenova/transformers');
-    localPipeline = await pipeline('feature-extraction', `Xenova/${LOCAL_MODEL}`);
+    const { pipeline } = await import('@huggingface/transformers');
+    localPipeline = await pipeline('feature-extraction', `Xenova/${LOCAL_MODEL}`); // Xenova models work with @huggingface/transformers
     return localPipeline;
   } catch (err) {
-    console.error('Error: Local embedding requires @xenova/transformers');
-    console.error('Install it: npm install @xenova/transformers');
+    console.error('Error: Local embedding requires @huggingface/transformers');
+    console.error('Install it: npm install @huggingface/transformers');
     process.exit(2);
   }
 }

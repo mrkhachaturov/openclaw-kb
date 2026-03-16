@@ -229,7 +229,7 @@ The following fields are **added or changed** in package.json. All other existin
   },
   "dependencies": {
     "sqlite-vec": "0.1.7-alpha.2",
-    "commander": "^13.0.0"
+    "commander": "^14.0.0"
   }
 }
 ```
@@ -451,7 +451,7 @@ KB_EMBEDDING_PROVIDER=local   → ONNX model for both index and query
 ```
 
 When `local` is selected:
-- `lib/embedder.js` loads an ONNX model (e.g., `all-MiniLM-L6-v2`, 384 dims) via `onnxruntime-node` or `@xenova/transformers`
+- `lib/embedder.js` loads an ONNX model (e.g., `all-MiniLM-L6-v2`, 384 dims) via `onnxruntime-node` or `@huggingface/transformers`
 - Embeddings are smaller (384 vs 1536), so the DB is also smaller
 - No API key needed — fully offline index + query
 - On macOS Apple Silicon, ONNX uses CoreML/Metal for GPU acceleration
