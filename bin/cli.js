@@ -28,4 +28,7 @@ registerCode(program);
 registerSkills(program);
 registerVerify(program);
 
+import { register as registerIndex } from '../commands/index.js';
+registerIndex(program);
+
 program.parse();
