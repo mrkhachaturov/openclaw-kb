@@ -37,4 +37,7 @@ registerSync(program);
 import { register as registerInstallService } from '../commands/install-service.js';
 registerInstallService(program);
 
+import { register as registerMcpServe } from '../commands/mcp-serve.js';
+registerMcpServe(program);
+
 program.parse();

@@ -157,6 +157,27 @@ Metadata commands (`stats`, `latest`, `history`, `since`) work without API key. 
 - **Storage**: ~80MB SQLite
 - **Cost**: ~$0.15/reindex (OpenAI) or free (local)
 
+## MCP Server
+
+Expose the KB as an MCP server for native AI tool integration (Claude Desktop, Cursor, Claude Code):
+
+```json
+{
+  "mcpServers": {
+    "openclaw-kb": {
+      "command": "openclaw-kb",
+      "args": ["mcp-serve"],
+      "env": {
+        "KB_DATA_DIR": "/path/to/data",
+        "UPSTREAM_DIR": "/path/to/upstream"
+      }
+    }
+  }
+}
+```
+
+**Available tools:** `search`, `search_docs`, `search_code`, `search_skills`, `search_ios`, `get_stats`, `get_latest`, `get_history`, `get_since`
+
 ## AI Agent Integration
 
 See [AGENTS.md](AGENTS.md) for integration with Claude Code, Cursor, and custom agents.

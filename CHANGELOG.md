@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-03-16
+
+### Added
+- MCP server (`openclaw-kb mcp-serve`) over stdio transport
+- 9 MCP tools: `search`, `search_docs`, `search_code`, `search_skills`, `search_ios`, `get_stats`, `get_latest`, `get_history`, `get_since`
+- `@modelcontextprotocol/sdk` and `zod` dependencies
+
 ## [1.1.0] - 2026-03-16
 
 ### Added
