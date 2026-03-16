@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { platform, homedir } from 'node:os';
-import { UPSTREAM_ROOT } from '../lib/config.js';
+import { getUpstreamRoot } from '../lib/config.js';
 import { EXIT_SUCCESS, EXIT_CONFIG_ERROR } from '../lib/exit-codes.js';
 
 export function register(program) {
@@ -17,7 +17,7 @@ export function register(program) {
 
 export function handler(opts = {}) {
   const { interval = '2h', envFile, upstreamDir, dataDir } = opts;
-  const resolvedUpstream = upstreamDir ? resolve(upstreamDir) : UPSTREAM_ROOT;
+  const resolvedUpstream = upstreamDir ? resolve(upstreamDir) : getUpstreamRoot();
   const resolvedData = dataDir ? resolve(dataDir) : (process.env.KB_DATA_DIR ? resolve(process.env.KB_DATA_DIR) : resolve('./data'));
 
   const os = platform();

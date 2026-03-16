@@ -19,8 +19,8 @@ export function register(program) {
     .option('--json', 'Output JSON')
     .option('--top <n>', 'Number of results', '8')
     .option('--offline', 'FTS-only keyword search (no API needed)')
-    .action((textParts, opts) => {
-      handler({ query: textParts.join(' '), ...opts });
+    .action(async (textParts, opts) => {
+      await handler({ query: textParts.join(' '), ...opts });
     });
 }
 
@@ -114,8 +114,8 @@ export async function handler(opts) {
     // Verify mode: second pass for code
     if (verify && results.length > 0 && !offline) {
       console.log('\n--- Related Implementation (Code) ---\n');
-      const queryEmbedding = await embedQuery(query);
-      const codeResults = hybridSearch(queryEmbedding, query, 5, null, 'code');
+      const codeEmbedding = await embedQuery(expandedQuery);
+      const codeResults = hybridSearch(codeEmbedding, expandedQuery, 5, null, 'code');
       if (codeResults.length === 0) {
         console.log('No related code found.\n');
       } else {

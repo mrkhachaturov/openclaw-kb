@@ -8,8 +8,8 @@ function makeAlias(name, description, filterOpts) {
       .option('--json', 'Output JSON')
       .option('--top <n>', 'Number of results', '8')
       .option('--offline', 'FTS-only keyword search')
-      .action((textParts, opts) => {
-        queryHandler({ query: textParts.join(' '), ...filterOpts, ...opts });
+      .action(async (textParts, opts) => {
+        await queryHandler({ query: textParts.join(' '), ...filterOpts, ...opts });
       });
   };
 }

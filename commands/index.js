@@ -6,7 +6,7 @@ import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
-import { UPSTREAM_ROOT, SOURCES, EMBEDDING_PROVIDER } from '../lib/config.js';
+import { getUpstreamRoot, SOURCES, EMBEDDING_PROVIDER } from '../lib/config.js';
 import { chunkFile } from '../lib/chunker.js';
 import { embedAll } from '../lib/embedder.js';
 import { formatChangelogMarkdown } from '../lib/release-parser.js';
@@ -47,12 +47,12 @@ export async function handler(opts) {
   const releaseFlag = opts.release || '';
 
   console.log('OpenClaw Knowledge Base Indexer');
-  console.log(`Upstream: ${UPSTREAM_ROOT}`);
+  console.log(`Upstream: ${getUpstreamRoot()}`);
   console.log(`Force: ${force}\n`);
 
   // Verify upstream source exists
-  if (!existsSync(UPSTREAM_ROOT)) {
-    console.error(`Error: Upstream source not found at ${UPSTREAM_ROOT}`);
+  if (!existsSync(getUpstreamRoot())) {
+    console.error(`Error: Upstream source not found at ${getUpstreamRoot()}`);
     console.error('Run ./install.sh first to set up the knowledge base');
     process.exit(EXIT_CONFIG_ERROR);
   }
@@ -71,7 +71,7 @@ export async function handler(opts) {
     // Try to detect from git (try exact tag first, fallback to commit hash)
     try {
       let result = spawnSync('git', ['describe', '--tags', '--exact-match'], {
-        cwd: UPSTREAM_ROOT,
+        cwd: getUpstreamRoot(),
         encoding: 'utf-8',
         stdio: ['ignore', 'pipe', 'ignore']
       });
@@ -81,7 +81,7 @@ export async function handler(opts) {
       } else {
         // Fallback to short commit hash
         result = spawnSync('git', ['rev-parse', '--short', 'HEAD'], {
-          cwd: UPSTREAM_ROOT,
+          cwd: getUpstreamRoot(),
           encoding: 'utf-8',
           stdio: ['ignore', 'pipe', 'ignore']
         });
@@ -117,7 +117,7 @@ export async function handler(opts) {
     const chunkMetadata = [];
 
     for (const filePath of files) {
-      const relPath = relative(UPSTREAM_ROOT, filePath);
+      const relPath = relative(getUpstreamRoot(), filePath);
       allDiscoveredPaths.add(relPath);
 
       const content = readFileSync(filePath, 'utf-8');
@@ -277,9 +277,9 @@ function discoverFiles(source) {
   const results = [];
 
   for (const glob of source.globs) {
-    const files = expandGlob(UPSTREAM_ROOT, glob);
+    const files = expandGlob(getUpstreamRoot(), glob);
     for (const f of files) {
-      const relPath = relative(UPSTREAM_ROOT, f);
+      const relPath = relative(getUpstreamRoot(), f);
       const excluded = (source.exclude || []).some(pattern => matchGlob(relPath, pattern));
       if (!excluded) {
         results.push(f);
