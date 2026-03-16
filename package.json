@@ -4,13 +4,14 @@
   "description": "Self-updating vector knowledge base for OpenClaw — semantic search over docs, code, and configs with automatic release tracking",
   "type": "module",
   "private": false,
-  "main": "query.js",
+  "main": "scripts/query.js",
   "bin": {
-    "openclaw-kb": "./query.js"
+    "openclaw-kb": "./scripts/query.js"
   },
   "scripts": {
-    "index": "node index.js",
-    "query": "node query.js"
+    "index": "node scripts/index.js",
+    "query": "node scripts/query.js",
+    "sync": "bash scripts/sync-latest-tag.sh"
   },
   "repository": {
     "type": "git",

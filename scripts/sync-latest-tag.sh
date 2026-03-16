@@ -4,12 +4,14 @@
 # Designed to run as a cron job/systemd timer for continuous KB freshness.
 set -euo pipefail
 
-# Detect script directory
+# Detect script and project directories
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PROJECT_DIR="$( cd "$SCRIPT_DIR/.." && pwd )"
 
-# Set up logging
-SYNC_LOG="$SCRIPT_DIR/log/sync.log"
-mkdir -p "$(dirname "$SYNC_LOG")"
+# Set up logging (KB_DATA_DIR overrides default log location)
+LOG_DIR="${KB_DATA_DIR:-$PROJECT_DIR/log}"
+SYNC_LOG="$LOG_DIR/sync.log"
+mkdir -p "$LOG_DIR"
 
 # Helper function to log sync operations
 log_sync() {
@@ -27,12 +29,12 @@ log_sync() {
 }
 
 # Load configuration from .env
-if [ -f "$SCRIPT_DIR/.env" ]; then
-    export $(grep -v '^#' "$SCRIPT_DIR/.env" | xargs)
+if [ -f "$PROJECT_DIR/.env" ]; then
+    export $(grep -v '^#' "$PROJECT_DIR/.env" | xargs)
 fi
 
 # Use env var or default to source directory inside this repo
-UPSTREAM_DIR="${UPSTREAM_DIR:-$SCRIPT_DIR/source}"
+UPSTREAM_DIR="${UPSTREAM_DIR:-$PROJECT_DIR/source}"
 
 # Verify upstream exists (should be set up by install.sh)
 if [ ! -d "$UPSTREAM_DIR" ]; then
@@ -110,7 +112,7 @@ echo "$RELEVANT" | head -20 | sed 's/^/  /' || true
 
 # Extract and store release metadata
 echo "[kb-auto-update] Extracting release metadata..."
-cd "$SCRIPT_DIR"
+cd "$PROJECT_DIR"
 
 # Call Node.js to extract and store release info
 if command -v node &> /dev/null; then
@@ -151,7 +153,7 @@ echo "[kb-auto-update] Re-indexing knowledge base..."
 
 # Run reindexing (using NODE_CMD from above)
 if [ -n "$NODE_CMD" ]; then
-    $NODE_CMD index.js --release "$LATEST_TAG"
+    $NODE_CMD scripts/index.js --release "$LATEST_TAG"
 else
     echo "[kb-auto-update] ERROR: Node.js not found"
     exit 1

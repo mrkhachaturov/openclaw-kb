@@ -9,10 +9,10 @@
 
 import { readFileSync } from 'node:fs';
 import { parseArgs } from 'node:util';
-import { ENV_PATH } from './lib/config.js';
-import { embedQuery } from './lib/embedder.js';
-import { openDb, closeDb, hybridSearch, getStats, getLatestRelease, getReleaseHistory, getChunksSinceRelease } from './lib/db.js';
-import { expandQuery } from './lib/synonyms.js';
+import { ENV_PATH } from '../lib/config.js';
+import { embedQuery } from '../lib/embedder.js';
+import { openDb, closeDb, hybridSearch, getStats, getLatestRelease, getReleaseHistory, getChunksSinceRelease } from '../lib/db.js';
+import { expandQuery } from '../lib/synonyms.js';
 
 // Load .env
 loadEnv();

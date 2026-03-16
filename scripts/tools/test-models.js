@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { parseArgs } from 'node:util';
-import { ENV_PATH, EMBEDDING_MODEL } from './lib/config.js';
-import { embedQuery } from './lib/embedder.js';
-import { openDb, closeDb, hybridSearch } from './lib/db.js';
+import { ENV_PATH, EMBEDDING_MODEL } from '../../lib/config.js';
+import { embedQuery } from '../../lib/embedder.js';
+import { openDb, closeDb, hybridSearch } from '../../lib/db.js';
 
 // Load .env
 loadEnv();

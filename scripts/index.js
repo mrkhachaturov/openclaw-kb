@@ -12,16 +12,16 @@ import { join, relative } from 'node:path';
 import { createHash } from 'node:crypto';
 import { parseArgs } from 'node:util';
 import { spawnSync } from 'node:child_process';
-import { UPSTREAM_ROOT, SOURCES, ENV_PATH } from './lib/config.js';
-import { chunkFile } from './lib/chunker.js';
-import { embedAll } from './lib/embedder.js';
-import { formatChangelogMarkdown } from './lib/release-parser.js';
+import { UPSTREAM_ROOT, SOURCES, ENV_PATH } from '../lib/config.js';
+import { chunkFile } from '../lib/chunker.js';
+import { embedAll } from '../lib/embedder.js';
+import { formatChangelogMarkdown } from '../lib/release-parser.js';
 import {
   openDb, closeDb,
   getFileHash, upsertFile, getAllFilePaths, deleteFile,
   deleteChunksByPath, insertChunks, getStats,
   getReleaseHistory,
-} from './lib/db.js';
+} from '../lib/db.js';
 
 // Load .env
 loadEnv();
