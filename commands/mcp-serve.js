@@ -1,7 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
-import { openDb, hybridSearch, searchFTS, getStats, getLatestRelease, getReleaseHistory, getChunksSinceRelease } from '../lib/db.js';
+import { openDb, hybridSearch, searchFTS, getStats, getCurrentIndexedRelease, getReleaseHistory, getChunksSinceRelease } from '../lib/db.js';
 import { embedQuery } from '../lib/embedder.js';
 import { expandQuery } from '../lib/synonyms.js';
 import { EMBEDDING_PROVIDER } from '../lib/config.js';
@@ -108,7 +108,7 @@ export async function handler() {
     'Show the current indexed OpenClaw release version.',
     {},
     async () => {
-      const latest = getLatestRelease();
+      const latest = getCurrentIndexedRelease();
       if (!latest) {
         return { content: [{ type: 'text', text: 'No releases tracked yet' }] };
       }

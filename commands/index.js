@@ -9,12 +9,12 @@ import { spawnSync } from 'node:child_process';
 import { getUpstreamRoot, SOURCES, EMBEDDING_PROVIDER } from '../lib/config.js';
 import { chunkFile } from '../lib/chunker.js';
 import { embedAll } from '../lib/embedder.js';
-import { formatChangelogMarkdown } from '../lib/release-parser.js';
+import { extractReleaseMetadata, formatChangelogMarkdown, selectReleaseWindow } from '../lib/release-parser.js';
 import {
   openDb, closeDb,
   getFileHash, upsertFile, getAllFilePaths, deleteFile,
   deleteChunksByPath, insertChunks, getStats,
-  getReleaseHistory,
+  insertRelease,
 } from '../lib/db.js';
 import { EXIT_CONFIG_ERROR, EXIT_RUNTIME_ERROR } from '../lib/exit-codes.js';
 
@@ -181,6 +181,9 @@ export async function handler(opts) {
     }
   }
 
+  // Refresh release metadata before indexing synthetic release chunks
+  syncRecentReleaseMetadata();
+
   // Index release changelogs
   await indexReleaseChangelogs(currentRelease);
 
@@ -199,6 +202,33 @@ export async function handler(opts) {
   closeDb();
 }
 
+function syncRecentReleaseMetadata() {
+  try {
+    const result = spawnSync('git', ['for-each-ref', 'refs/tags', '--sort=-creatordate', '--format=%(refname:short)'], {
+      cwd: getUpstreamRoot(),
+      encoding: 'utf-8',
+      stdio: ['ignore', 'pipe', 'ignore']
+    });
+
+    if (result.status !== 0) return;
+
+    const tags = result.stdout.trim().split('\n').filter(tag => tag.startsWith('v'));
+    if (tags.length === 0) return;
+
+    for (let i = 0; i < tags.length; i++) {
+      try {
+        const tag = tags[i];
+        const previousTag = tags[i + 1] || null;
+        insertRelease(extractReleaseMetadata(tag, previousTag, getUpstreamRoot()));
+      } catch {
+        // Skip malformed tags but keep processing the rest
+      }
+    }
+  } catch {
+    // Release metadata is helpful but non-fatal
+  }
+}
+
 // --- Private helpers ---
 
 /**
@@ -207,21 +237,16 @@ export async function handler(opts) {
  */
 async function indexReleaseChangelogs(currentRelease = null) {
   const db = openDb();
+  const allReleases = db.prepare('SELECT * FROM releases ORDER BY date DESC').all();
+  const releases = selectReleaseWindow(allReleases, 3);
+  const desiredPaths = new Set(releases.map(release => `releases/${release.tag}`));
 
-  // Find releases without indexed changelogs
-  const releases = db.prepare(`
-    SELECT r.* FROM releases r
-    LEFT JOIN chunks c ON c.path = 'releases/' || r.tag
-    WHERE c.id IS NULL
-    ORDER BY r.date DESC
-  `).all();
-
-  if (releases.length === 0) {
-    return;
+  for (const path of getAllFilePaths().filter(path => path.startsWith('releases/'))) {
+    if (!desiredPaths.has(path)) {
+      deleteChunksByPath(path);
+      deleteFile(path);
+    }
   }
-
-  console.log(`\n--- Indexing Release Changelogs ---`);
-  console.log(`  Found ${releases.length} releases without indexed changelogs`);
 
   const chunksToEmbed = [];
   const chunkMetadata = [];
@@ -234,28 +259,41 @@ async function indexReleaseChangelogs(currentRelease = null) {
     };
 
     const changelog = formatChangelogMarkdown(metadata);
-    const chunkId = `releases/${release.tag}`;
-    const chunkHash = createHash('sha256').update(changelog).digest('hex');
+    const releasePath = `releases/${release.tag}`;
+    const releaseHash = createHash('sha256').update(changelog).digest('hex');
+    const existingHash = getFileHash(releasePath);
 
-    const chunk = {
-      id: chunkId,
-      path: `releases/${release.tag}`,
-      source: 'releases',
-      startLine: 1,
-      endLine: 1,
-      text: changelog,
-      hash: chunkHash,
-      contentType: 'docs',
-      language: 'markdown',
-      category: 'release-notes'
-    };
+    if (existingHash === releaseHash) continue;
 
-    chunksToEmbed.push(chunk.text);
-    chunkMetadata.push(chunk);
+    deleteChunksByPath(releasePath);
 
-    // Also upsert to files table
-    upsertFile(`releases/${release.tag}`, 'releases', chunkHash);
+    const parts = splitReleaseChangelog(changelog);
+    for (let index = 0; index < parts.length; index++) {
+      const text = parts[index];
+      const chunkHash = createHash('sha256').update(text).digest('hex');
+      const chunk = {
+        id: `${release.tag}#${index + 1}`,
+        path: releasePath,
+        source: 'releases',
+        startLine: 1,
+        endLine: 1,
+        text,
+        hash: chunkHash,
+        contentType: 'docs',
+        language: 'markdown',
+        category: 'release-notes'
+      };
+      chunksToEmbed.push(chunk.text);
+      chunkMetadata.push(chunk);
+    }
+
+    upsertFile(releasePath, 'releases', releaseHash);
   }
+
+  if (chunksToEmbed.length === 0) return;
+
+  console.log(`\n--- Indexing Release Changelogs ---`);
+  console.log(`  Found ${chunksToEmbed.length} release changelog chunks to refresh`);
 
   if (chunksToEmbed.length > 0) {
     console.log(`  Embedding ${chunksToEmbed.length} changelog chunks...`);
@@ -267,6 +305,27 @@ async function indexReleaseChangelogs(currentRelease = null) {
     insertChunks(chunkMetadata, embeddings, currentRelease);
     console.log(`  Indexed ${chunkMetadata.length} release changelogs`);
   }
+}
+
+function splitReleaseChangelog(markdown, maxChars = 5500) {
+  if (markdown.length <= maxChars) return [markdown];
+
+  const sections = markdown.split('\n## ');
+  const parts = [];
+  let current = sections[0];
+
+  for (let i = 1; i < sections.length; i++) {
+    const section = `\n## ${sections[i]}`;
+    if ((current + section).length > maxChars && current.length > 0) {
+      parts.push(current);
+      current = sections[0] + section;
+    } else {
+      current += section;
+    }
+  }
+
+  if (current) parts.push(current);
+  return parts;
 }
 
 /**
@@ -313,7 +372,7 @@ function walkGlob(dir, parts) {
     // And recurse into subdirs with same pattern
     for (const entry of safeReaddir(dir)) {
       const full = join(dir, entry);
-      if (isDir(full)) {
+      if (isDir(full) && !shouldSkipDirectory(entry)) {
         results.push(...walkGlob(full, parts)); // keep ** pattern
       }
     }
@@ -362,4 +421,8 @@ function safeReaddir(dir) {
 
 function isDir(p) {
   try { return statSync(p).isDirectory(); } catch { return false; }
+}
+
+function shouldSkipDirectory(name) {
+  return name === 'node_modules' || name === '.git';
 }

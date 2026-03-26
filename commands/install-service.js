@@ -48,18 +48,23 @@ function parseInterval(str) {
   return val;
 }
 
-function generateSystemd({ interval, envFile, upstreamDir, dataDir }) {
-  const dir = join(homedir(), '.config', 'systemd', 'user');
-  mkdirSync(dir, { recursive: true });
-
-  const minutes = Math.round(parseInterval(interval) / 60);
-
+export function buildSystemdFiles({ interval, envFile, upstreamDir, dataDir }) {
+  const seconds = parseInterval(interval);
   let serviceContent = `[Unit]\nDescription=OpenClaw KB Sync\n\n[Service]\nType=oneshot\nExecStart=openclaw-kb sync --upstream-dir ${upstreamDir} --data-dir ${dataDir}\n`;
   if (envFile) {
     serviceContent += `EnvironmentFile=${resolve(envFile)}\n`;
   }
 
-  const timerContent = `[Unit]\nDescription=OpenClaw KB Sync Timer\n\n[Timer]\nOnCalendar=*:0/${minutes}\nPersistent=true\n\n[Install]\nWantedBy=timers.target\n`;
+  const timerContent = `[Unit]\nDescription=OpenClaw KB Sync Timer\n\n[Timer]\nOnBootSec=60\nOnUnitActiveSec=${seconds}\nPersistent=true\n\n[Install]\nWantedBy=timers.target\n`;
+
+  return { serviceContent, timerContent };
+}
+
+function generateSystemd({ interval, envFile, upstreamDir, dataDir }) {
+  const dir = join(homedir(), '.config', 'systemd', 'user');
+  mkdirSync(dir, { recursive: true });
+
+  const { serviceContent, timerContent } = buildSystemdFiles({ interval, envFile, upstreamDir, dataDir });
 
   const servicePath = join(dir, 'openclaw-kb-sync.service');
   const timerPath = join(dir, 'openclaw-kb-sync.timer');

@@ -4,6 +4,27 @@ import { expandQuery } from '../lib/synonyms.js';
 import { EMBEDDING_PROVIDER } from '../lib/config.js';
 import { EXIT_SUCCESS, EXIT_RUNTIME_ERROR, EXIT_CONFIG_ERROR, EXIT_NO_RESULTS } from '../lib/exit-codes.js';
 
+function serializeResult(r) {
+  return {
+    score: Math.round(r.score * 1000) / 1000,
+    path: r.path,
+    lines: `${r.startLine}-${r.endLine}`,
+    source: r.source,
+    contentType: r.contentType,
+    language: r.language,
+    category: r.category,
+    snippet: r.text.slice(0, 800),
+  };
+}
+
+export function formatJsonOutput(query, results, relatedCode = []) {
+  return JSON.stringify({
+    query,
+    results: results.map(serializeResult),
+    ...(relatedCode.length > 0 ? { relatedCode: relatedCode.map(serializeResult) } : {}),
+  }, null, 2);
+}
+
 export function register(program) {
   program
     .command('query <text...>')
@@ -66,9 +87,15 @@ export async function handler(opts) {
       results = hybridSearch(queryEmbedding, expandedQuery, limit, sourceFilter, contentTypeFilter);
     }
 
+    let codeResults = [];
+    if (verify && results.length > 0 && !offline) {
+      const codeEmbedding = await embedQuery(expandedQuery);
+      codeResults = hybridSearch(codeEmbedding, expandedQuery, 5, null, 'code');
+    }
+
     if (results.length === 0) {
       if (json) {
-        console.log(JSON.stringify({ query, results: [] }));
+        console.log(formatJsonOutput(query, []));
       } else {
         console.log('No results found.');
       }
@@ -77,20 +104,7 @@ export async function handler(opts) {
     }
 
     if (json) {
-      const output = {
-        query,
-        results: results.map(r => ({
-          score: Math.round(r.score * 1000) / 1000,
-          path: r.path,
-          lines: `${r.startLine}-${r.endLine}`,
-          source: r.source,
-          contentType: r.contentType,
-          language: r.language,
-          category: r.category,
-          snippet: r.text.slice(0, 800),
-        })),
-      };
-      console.log(JSON.stringify(output, null, 2));
+      console.log(formatJsonOutput(query, results, codeResults));
     } else {
       console.log(`Query: "${query}"`);
       if (sourceFilter) console.log(`Filter: source=${sourceFilter}`);
@@ -112,10 +126,8 @@ export async function handler(opts) {
     }
 
     // Verify mode: second pass for code
-    if (verify && results.length > 0 && !offline) {
+    if (verify && results.length > 0 && !offline && !json) {
       console.log('\n--- Related Implementation (Code) ---\n');
-      const codeEmbedding = await embedQuery(expandedQuery);
-      const codeResults = hybridSearch(codeEmbedding, expandedQuery, 5, null, 'code');
       if (codeResults.length === 0) {
         console.log('No related code found.\n');
       } else {

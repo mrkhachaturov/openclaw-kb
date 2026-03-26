@@ -1,6 +1,6 @@
 {
   "name": "openclaw-kb",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Self-updating vector knowledge base for OpenClaw — semantic search over docs, code, and configs with automatic release tracking",
   "type": "module",
   "private": false,
@@ -17,7 +17,8 @@
   ],
   "scripts": {
     "index": "node scripts/index.js",
-    "query": "node scripts/query.js"
+    "query": "node scripts/query.js",
+    "test": "node --test tests/*.test.js"
   },
   "repository": {
     "type": "git",

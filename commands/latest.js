@@ -1,4 +1,4 @@
-import { openDb, closeDb, getLatestRelease } from '../lib/db.js';
+import { openDb, closeDb, getCurrentIndexedRelease } from '../lib/db.js';
 import { EXIT_SUCCESS, EXIT_RUNTIME_ERROR } from '../lib/exit-codes.js';
 
 export function register(program) {
@@ -11,7 +11,7 @@ export function register(program) {
 export function handler() {
   try {
     openDb();
-    const latest = getLatestRelease();
+    const latest = getCurrentIndexedRelease();
     if (!latest) {
       console.log('No releases tracked yet');
     } else {

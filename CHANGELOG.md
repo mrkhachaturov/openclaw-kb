@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-03-26
+
+### Fixed
+- Changelog chunker: limit to 3 most recent versions instead of all 60+ (reduces stale embeddings and API cost)
+- Changelog chunker: split oversized version sections to stay under OpenAI 8192 token embedding limit
+- Changelog chunker: handle "Unreleased" section heading
+- Chunk oversized non-changelog files safely, including single-line bundled artifacts
+- Keep useful JavaScript source searchable while excluding generated and bundled noise from indexing
+- Exclude minified/bundled/generated artifacts from indexing (`*.min.js`, `*.bundle.js`, `*.generated.ts`, `vendor/`, `assets/*.js`)
+- Skip `.git` and `node_modules` during recursive file discovery to avoid deep traversal failures
+- Respect `KB_DATA_DIR` at database open time so runtime path overrides work correctly
+- Keep `verify --json` output parseable by returning related code hits inside the JSON payload
+
 ## [1.2.0] - 2026-03-16
 
 ### Added
