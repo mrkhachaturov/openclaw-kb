@@ -107,20 +107,22 @@ Consumer config (`.mcp.json`):
 ## Testing
 
 ```bash
-node bin/cli.js --version              # 1.2.0
-node bin/cli.js stats                  # DB stats (no API key needed)
-node bin/cli.js query "test" --offline # FTS-only, no API key
+node bin/cli.js --version           # 1.2.1
+node bin/cli.js stats               # DB stats (no API key needed)
+node bin/cli.js query "test" --offline  # FTS-only, no API key
 ```
 
 ## Publishing
 
-Trusted publisher via OIDC — no npm token needed. Push a `v*` tag:
+Trusted publisher via OIDC — no npm token needed. Push a `v*` tag after updating `package.json` and `CHANGELOG.md`:
 
 ```bash
-# 1. Bump version in package.json + CHANGELOG.md
-# 2. Commit, tag, push
-git tag v1.3.0
+git tag v1.2.1
 git push origin main --tags
 ```
+
+## MCP
+
+When configuring `openclaw-kb` as an MCP server, explicitly pass `KB_DATA_DIR` and `UPSTREAM_DIR` in the MCP server `env`. Some MCP hosts do not inherit the shell or `mise` environment, and the server can otherwise attach to the wrong database or upstream checkout.
 
 GitHub Actions (Node 24) runs `npm publish` with automatic OIDC auth and provenance.

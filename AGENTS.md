@@ -102,6 +102,8 @@ The `path` is relative to the OpenClaw source root (UPSTREAM_DIR), not the KB re
 openclaw-kb docs "your question" --json
 ```
 
+If you expose the KB over MCP, configure the server with explicit `KB_DATA_DIR` and `UPSTREAM_DIR` environment variables. Do not assume the host will inherit your shell or `mise` environment.
+
 ### Programmatic (Python)
 
 ```python

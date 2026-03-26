@@ -1,10 +1,13 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
+import { readFileSync } from 'node:fs';
 import { openDb, hybridSearch, searchFTS, getStats, getCurrentIndexedRelease, getReleaseHistory, getChunksSinceRelease } from '../lib/db.js';
 import { embedQuery } from '../lib/embedder.js';
 import { expandQuery } from '../lib/synonyms.js';
 import { EMBEDDING_PROVIDER } from '../lib/config.js';
+
+const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf-8'));
 
 export function register(program) {
   program
@@ -24,7 +27,7 @@ export async function handler() {
 
   const server = new McpServer({
     name: 'openclaw-kb',
-    version: '1.2.0',
+    version: pkg.version,
   });
 
   // --- Search tools ---

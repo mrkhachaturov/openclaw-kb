@@ -17,8 +17,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Keep useful JavaScript source searchable while excluding generated and bundled noise from indexing
 - Exclude minified/bundled/generated artifacts from indexing (`*.min.js`, `*.bundle.js`, `*.generated.ts`, `vendor/`, `assets/*.js`)
 - Skip `.git` and `node_modules` during recursive file discovery to avoid deep traversal failures
+- Clean orphaned vector rows during reindex so force rebuilds complete reliably
 - Respect `KB_DATA_DIR` at database open time so runtime path overrides work correctly
+- Use chronological release metadata for `since` instead of lexical tag comparison
+- Limit indexed release changelog context to the most recent 3 release families while keeping all variants inside each family
+- Report the current indexed release consistently across CLI and MCP metadata tools
+- Generate systemd timers with elapsed intervals instead of invalid calendar syntax
 - Keep `verify --json` output parseable by returning related code hits inside the JSON payload
+- Report the current package version from the MCP server instead of a hardcoded value
 
 ## [1.2.0] - 2026-03-16
 

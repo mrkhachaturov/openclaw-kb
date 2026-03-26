@@ -176,6 +176,8 @@ Expose the KB as an MCP server for native AI tool integration (Claude Desktop, C
 }
 ```
 
+Always pass `KB_DATA_DIR` and `UPSTREAM_DIR` explicitly in MCP config. Many MCP hosts do not inherit your shell or `mise` environment, and without these values the server may open the wrong database or upstream checkout.
+
 **Available tools:** `search`, `search_docs`, `search_code`, `search_skills`, `search_ios`, `get_stats`, `get_latest`, `get_history`, `get_since`
 
 ## AI Agent Integration
