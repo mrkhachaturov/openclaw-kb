@@ -16,7 +16,7 @@ Self-updating vector knowledge base for OpenClaw — semantic search over docs, 
 
 [env]
 UPSTREAM_DIR = "{{ config_root }}/build/openclaw/.upstream"
-KB_DATA_DIR = "{{ config_root }}/data/kb"
+
 ```
 
 ### For development
@@ -135,7 +135,7 @@ A DB built with `local` embeddings is not compatible with `openai` embeddings (d
 Run `sync` on one machine, distribute the DB file via Syncthing/rsync/S3:
 
 ```
-Server (cron): openclaw-kb sync → updates upstream.db
+Server (cron): openclaw-kb sync → updates openclaw.db
                     │
                     │  file sync
                     ▼

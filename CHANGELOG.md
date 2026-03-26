@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.2] - 2026-03-27
+
+### Fixed
+- Rename database file from `upstream.db` to `openclaw.db` to prevent cross-contamination when multiple KB packages share the same `KB_DATA_DIR`
+
 ## [1.2.1] - 2026-03-26
 
 ### Fixed

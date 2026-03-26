@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { DatabaseSync } from 'node:sqlite';
 
-const db = new DatabaseSync('./data/upstream.db');
+const db = new DatabaseSync('./data/openclaw.db');
 
 const stats = db.prepare(`
   SELECT language,

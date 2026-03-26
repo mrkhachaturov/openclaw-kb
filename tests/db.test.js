@@ -14,12 +14,12 @@ test('openDb follows KB_DATA_DIR at call time across reopen cycles', () => {
     process.env.KB_DATA_DIR = dirA;
     openDb();
     closeDb();
-    assert.ok(existsSync(join(dirA, 'upstream.db')));
+    assert.ok(existsSync(join(dirA, 'openclaw.db')));
 
     process.env.KB_DATA_DIR = dirB;
     openDb();
     closeDb();
-    assert.ok(existsSync(join(dirB, 'upstream.db')));
+    assert.ok(existsSync(join(dirB, 'openclaw.db')));
   } finally {
     closeDb();
     if (original === undefined) delete process.env.KB_DATA_DIR;
