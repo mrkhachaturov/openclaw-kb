@@ -53,7 +53,7 @@ scripts/tools/          # Dev tools (not published)
 openclaw-kb query <text> [--docs|--code|--skills|--ios|--macos|--shared|--releases|--verify] [--json] [--top N] [--offline]
 openclaw-kb docs|code|skills|verify <text>   # short aliases
 openclaw-kb index [--force] [--release <tag>]
-openclaw-kb sync [--upstream-dir <path>] [--data-dir <path>]
+openclaw-kb sync [--upstream-dir <path>] [--data-dir <path>] [--remote <name>]
 openclaw-kb stats|latest|history
 openclaw-kb since <version>
 openclaw-kb install-service [--interval 2h] [--env-file <path>] [--upstream-dir <path>] [--data-dir <path>]
@@ -103,6 +103,7 @@ Consumer config (`.mcp.json`):
 | `KB_EMBEDDING_MODEL` | `text-embedding-3-small` | OpenAI model |
 | `KB_LOCAL_MODEL` | `all-MiniLM-L6-v2` | ONNX model |
 | `KB_LOG_DIR` | `$KB_DATA_DIR/log` | Override log path |
+| `KB_GIT_REMOTE` | `upstream` | Git remote for `sync` tag fetching |
 
 ## Testing
 

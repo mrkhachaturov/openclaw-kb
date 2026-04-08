@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.3] - 2026-04-08
+
+### Fixed
+- Sync command fetched tags from `origin` instead of `upstream`, missing new releases when the fork doesn't mirror upstream tags
+
+### Added
+- `--remote <name>` CLI option and `KB_GIT_REMOTE` env var to configure which git remote `sync` fetches tags from (default: `upstream`)
+
 ## [1.2.2] - 2026-03-27
 
 ### Fixed

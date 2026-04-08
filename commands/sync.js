@@ -6,7 +6,7 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, appendFileSync } from 'node:fs';
 import { resolve, join } from 'node:path';
-import { getUpstreamRoot, getLogDir, EMBEDDING_PROVIDER } from '../lib/config.js';
+import { getUpstreamRoot, getLogDir, getGitRemote, EMBEDDING_PROVIDER } from '../lib/config.js';
 import { EXIT_SUCCESS, EXIT_RUNTIME_ERROR, EXIT_CONFIG_ERROR } from '../lib/exit-codes.js';
 import { handler as indexHandler } from './index.js';
 
@@ -19,6 +19,7 @@ export function register(program) {
     .description('Fetch latest upstream tag and reindex if needed')
     .option('--upstream-dir <path>', 'Override UPSTREAM_DIR')
     .option('--data-dir <path>', 'Override KB_DATA_DIR')
+    .option('--remote <name>', 'Git remote to fetch tags from (default: upstream, env: KB_GIT_REMOTE)')
     .action((opts) => handler(opts));
 }
 
@@ -26,9 +27,11 @@ export async function handler(opts = {}) {
   // Apply CLI overrides to process.env BEFORE calling getter functions
   if (opts.upstreamDir) process.env.UPSTREAM_DIR = resolve(opts.upstreamDir);
   if (opts.dataDir) process.env.KB_DATA_DIR = resolve(opts.dataDir);
+  if (opts.remote) process.env.KB_GIT_REMOTE = opts.remote;
 
   // Use getter functions so CLI overrides take effect
   const upstreamDir = getUpstreamRoot();
+  const remote = getGitRemote();
   const logDir = getLogDir();
   const syncLog = join(logDir, 'sync.log');
   mkdirSync(logDir, { recursive: true });
@@ -57,8 +60,8 @@ export async function handler(opts = {}) {
   const git = (args) => execFileSync('git', args, { cwd: upstreamDir, encoding: 'utf-8' }).trim();
 
   try {
-    console.log('[sync] Fetching upstream tags...');
-    execFileSync('git', ['fetch', 'origin', '--tags', '--quiet'], { cwd: upstreamDir });
+    console.log(`[sync] Fetching tags from remote '${remote}'...`);
+    execFileSync('git', ['fetch', remote, '--tags', '--quiet'], { cwd: upstreamDir });
 
     // Find latest tag
     const tags = git(['tag', '--list', 'v2026.*', '--sort=-v:refname']);
