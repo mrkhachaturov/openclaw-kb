@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.4] - 2026-05-03
+
+### Fixed
+- `getTagInfo` crashed on annotated/signed tags because `git show <tag> --format=...` prepended the tag header and signature before the format line, leaving `commit` as a multi-line blob and downstream calls returning null. Switched to `git log -1 --format=... <tag>`, which dereferences the tag and emits only the format line for both lightweight and annotated tags.
+
 ## [1.2.3] - 2026-04-08
 
 ### Fixed

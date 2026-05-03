@@ -1,6 +1,6 @@
 {
   "name": "openclaw-kb",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "description": "Self-updating vector knowledge base for OpenClaw — semantic search over docs, code, and configs with automatic release tracking",
   "type": "module",
   "private": false,
